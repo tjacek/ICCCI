@@ -94,3 +94,7 @@ if __name__ == "__main__":
     paths["common"].append("1D_CNN/feats")
     print(paths)
     exp_desc(paths,out_path="split_I")
+    import rename
+    paths["binary"]="ens_splitII/feats"
+    helper=rename.get_renam_fun("rename")
+    exp_desc(paths,"split_II",info="split II",transform=helper)
