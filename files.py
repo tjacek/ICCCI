@@ -56,3 +56,10 @@ def person_selector(name_i):
 def get_paths(in_path,name="dtw"):
     return ["%s/%s" % (path_i,name) 
                 for path_i in top_files(in_path)]
+
+def save_txt(text,out_path):
+    if(type(text)==list):
+        text="\n".join(text)
+    file1 = open(out_path,"w")   
+    file1.write(text) 
+    file1.close()

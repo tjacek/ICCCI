@@ -14,3 +14,8 @@ def basic_paths(dataset,dir_path,common,binary,name="dtw"):
     else:
         paths["binary"]=None
     return paths 
+
+def get_metrics(result_i):
+	acc_i= result_i.get_acc()
+	metrics="%.4f,%.4f,%.4f" % result_i.metrics()[:3]
+	return "%.4f,%s" % (acc_i,metrics)

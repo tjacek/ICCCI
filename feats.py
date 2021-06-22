@@ -86,5 +86,13 @@ def read_single(in_path):
             feat_dict[info_i]=x_i
     return Feats(feat_dict)
 
+def read_unified(paths):
+    datasets=[read_single(path_i) 
+                for path_i in paths]
+    full_data=datasets[0]
+    for data_i in datasets[1:]:
+        full_data+=data_i
+    return full_data
+
 def common_names(names1,names2):
     return list(set(names1).intersection(set(names2)))
