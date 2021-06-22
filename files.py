@@ -19,6 +19,7 @@ class Name(str):
         subname_k="_".join(self.split("_")[:k])
         return Name(subname_k)
 
+
 def natural_sort(l):
     return sorted(l,key=natural_keys)
 
@@ -31,6 +32,11 @@ def atoi(text):
 def make_dir(path):
     if(not os.path.isdir(path)):
         os.mkdir(path)
+
+def top_files(path):
+    paths=[ path+'/'+file_i for file_i in os.listdir(path)]
+    paths=sorted(paths,key=natural_keys)
+    return paths
 
 def split(dict,selector=None):
     if(not selector):
@@ -46,3 +52,7 @@ def split(dict,selector=None):
 def person_selector(name_i):
     person_i=int(name_i.split('_')[1])
     return person_i%2==1
+
+def get_paths(in_path,name="dtw"):
+    return ["%s/%s" % (path_i,name) 
+                for path_i in top_files(in_path)]
