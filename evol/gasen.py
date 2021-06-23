@@ -38,5 +38,5 @@ if __name__ == "__main__":
     paths["common"].append("../1D_CNN/feats")
     print(paths)
     ensemble=evol.EvolEnsemble(loss=Corl)
-    result=ensemble(paths)
+    result=ensemble.median_exp(paths,n=10)
     result.report()

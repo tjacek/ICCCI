@@ -16,8 +16,13 @@ class EvolEnsemble(ens.Ensemble):
         self.valid=valid
         self.loss=loss
 
-    def __call__(self,paths,clf="LR",s_clf=None):
+    def __call__(self,paths,clf="LR",n=1):
         votes,datasets=super(EvolEnsemble,self).make_votes(paths,clf)
+        if(n==1):
+            return [self.single_exp(datasets)]
+        return [self.single_exp(votes,datasets) for i in range(n)]
+
+    def single_exp(self,votes,datasets):
         weights=self.find_weights(datasets)
         result=votes.weighted(weights)
         return result
@@ -33,6 +38,12 @@ class EvolEnsemble(ens.Ensemble):
         loss_fun.iter=0
         weights=result['x']
         return weights
+
+    def median_exp(self,paths,clf="LR",n=1):
+        results=self(paths,clf,n)
+        acc=[ result_i.get_acc() for result_i in results]
+        index=np.argsort(acc)[len(acc)//2]
+        return results[index]
 
 class Validation(object):
     def __init__(self,selector_gen=None):
