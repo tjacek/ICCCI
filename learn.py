@@ -114,6 +114,13 @@ def make_SVC():
     clf = GridSearchCV(SVC(C=1,probability=True),params, cv=5,scoring='accuracy')
     return clf
 
+def to_one_hot(y,n_cats):
+    one_hot=[]
+    for y_i in y:
+        one_hot.append(np.zeros((n_cats,)))
+        one_hot[-1][y_i]=1.0
+    return np.array(one_hot)
+
 
 if __name__ == "__main__":
     result=train_model("1D_CNN/feats")

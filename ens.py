@@ -9,17 +9,21 @@ class Ensemble(object):
         self.read=read
 
     def __call__(self,paths,binary=False,clf="LR",s_clf=None):
-        datasets=self.read(paths["common"],paths["binary"])
-        if(self.transform):
-            datasets=[self.transform(data_i)  for data_i in datasets]
-        results=[learn.train_model(data_i,clf_type=clf,binary=False)
-                    for data_i in datasets]
-        votes=Votes(results)        
+        votes,datasets=self.make_votes(self,paths,clf)
         if(s_clf):
             votes=Votes([votes.results[i] for i in s_clf])
         result=votes.voting(binary)
         print(result.get_acc()) 
         return result,votes
+
+    def make_votes(self,paths,clf):
+        datasets=self.read(paths["common"],paths["binary"])
+        if(self.transform):
+            datasets=[self.transform(data_i)  for data_i in datasets]
+        results=[learn.train_model(data_i,clf_type=clf,binary=False)
+                    for data_i in datasets]
+        votes=Votes(results)   
+        return votes,datasets
 
 class Votes(object):
     def __init__(self,results):
@@ -35,6 +39,12 @@ class Votes(object):
         else:
             votes=np.array([ result_i.as_numpy() 
                     for result_i in self.results])
+        votes=np.sum(votes,axis=0)
+        return learn.Result(self.results[0].y_true,votes,self.results[0].names)
+
+    def weighted(self,weights):
+        votes=np.array([ weight_i*result_i.as_numpy() 
+                    for weight_i,result_i in zip(weights,self.results)])
         votes=np.sum(votes,axis=0)
         return learn.Result(self.results[0].y_true,votes,self.results[0].names)
 
