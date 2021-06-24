@@ -17,13 +17,17 @@ class Ensemble(object):
         return result,votes
 
     def make_votes(self,paths,clf):
-        datasets=self.read(paths["common"],paths["binary"])
-        if(self.transform):
-            datasets=[self.transform(data_i)  for data_i in datasets]
+        datasets=self.get_datasets(paths)
         results=[learn.train_model(data_i,clf_type=clf,binary=False)
                     for data_i in datasets]
         votes=Votes(results)   
         return votes,datasets
+
+    def get_datasets(self,paths):
+        datasets=self.read(paths["common"],paths["binary"])
+        if(self.transform):
+            datasets=[self.transform(data_i)  for data_i in datasets]
+        return datasets
 
 class Votes(object):
     def __init__(self,results):

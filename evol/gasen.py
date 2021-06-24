@@ -68,20 +68,25 @@ def auc_exp(paths,out_path,rename_path=None,n=1):
     helper=get_rename_helper(rename_path)
     for i in range(1,9):
         p_i= 0.1*(i+1)
-        valid_i=evol.Validation(p=p_i) 
-        ensemble_i=evol.EvolEnsemble(valid_i,loss=Comb,
+        valid_i=evol.Validation(p_i) 
+        ensemble_i=evol.SubsetEnsemble(valid_i,#loss=Comb,
             transform=helper)
         result_i,weights_i=ensemble_i(paths,clf="LR",n=n)
-        n_clf= len(weights_i[weights_i!=0])
+        n_clf= get_n_clf(weights_i)
         line_i=exp.get_metrics(result_i)
         line_i="%s,%d,%s" % (str(p_i),n_clf,line_i)
         lines.append(line_i)
     files.save_txt(lines,out_path)
 
+def get_n_clf(weights):
+    if(type(weights)==int):
+        return weights
+    return len(weights_i[weights_i!=0])
+
 if __name__ == "__main__":
     dataset=".."
     dir_path=None
-    paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitI/feats")
+    paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitII/feats")
     paths["common"].append("../1D_CNN/feats")
 #    visualize_corl(paths,"visualize/raw/splitII")
 #    gasen_exp(paths)

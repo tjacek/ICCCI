@@ -56,10 +56,24 @@ class EvolEnsemble(ens.Ensemble):
         weights=[weights[i] for i in indexes]
         return results,weights
 
+class SubsetEnsemble(ens.Ensemble):
+    def __init__(self,valid,read=None,transform=None):
+        super(SubsetEnsemble,self).__init__(read,transform)
+        self.valid=valid
+
+    def __call__(self,paths,clf="LR",n=1):
+        datasets=super(SubsetEnsemble,self).get_datasets(paths)
+        results=self.valid.subset(datasets,clf)
+        votes=ens.Votes(results)
+        result=votes.voting(False)
+        return result,len(results)
+
 class Validation(object):
-    def __init__(self,selector_gen=None,p=0.5):
+    def __init__(self,selector_gen=None):
         if( selector_gen is None):
-            selector_gen=StratGen(test_size=p)	
+            selector_gen=StratGen(test_size=0.5)	
+        if(type(selector_gen)==float):
+                selector_gen=StratGen(test_size=selector_gen)
         self.selector_gen=selector_gen	
 
     def __call__(self,datasets,clf="LR"):
@@ -68,6 +82,22 @@ class Validation(object):
         selector= self.selector_gen(names)
         results= [learn.train_model(train_i,clf_type=clf,selector=selector)
                 for train_i in train]
+        return results
+
+    def subset(self,datasets,clf="LR"):
+        train,test=datasets[0].split()
+        train,test=list(train.keys()),list(test.keys())
+        selector= self.selector_gen(train)
+        train=[name_i for name_i in train
+                if(not selector(name_i))]
+        final=train+test
+        import feats
+        def helper(data_i):
+            raw={ name_i:data_i[name_i]
+                    for name_i in final }
+            return feats.Feats(raw)
+        results= [learn.train_model(helper(data_i),clf_type=clf)
+                for data_i in datasets]
         return results
 
 class StratGen(object):
@@ -81,6 +111,7 @@ class StratGen(object):
         for train_index, test_index in self.sss.split(names,y):
             train_names=[ names[i] for i in train_index]
             return files.SetSelector(train_names)  
+
 
 class MSE(object):
     def __init__(self,all_votes):
