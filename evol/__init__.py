@@ -19,7 +19,7 @@ class EvolEnsemble(ens.Ensemble):
     def __call__(self,paths,clf="LR",n=1):
         votes,datasets=super(EvolEnsemble,self).make_votes(paths,clf)
         if(n==1):
-            return [self.single_exp(votes,datasets)]
+            return self.single_exp(votes,datasets)
         pairs=[self.single_exp(votes,datasets) for i in range(n)]
         results,weights=zip(*pairs)
         return results,weights
@@ -57,9 +57,9 @@ class EvolEnsemble(ens.Ensemble):
         return results,weights
 
 class Validation(object):
-    def __init__(self,selector_gen=None):
+    def __init__(self,selector_gen=None,p=0.5):
         if( selector_gen is None):
-            selector_gen=StratGen()	
+            selector_gen=StratGen(test_size=p)	
         self.selector_gen=selector_gen	
 
     def __call__(self,datasets,clf="LR"):

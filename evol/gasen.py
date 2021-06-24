@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
 import numpy as np
-import evol,exp,ens,learn
+import evol,exp,ens,learn,files
 
 class Comb(object):
     def __init__(self,all_votes):
@@ -48,11 +48,7 @@ def visualize_corl(paths,out_path):
     np.savetxt(out_path, C,delimiter=',')
 
 def gasen_exp(paths,rename_path=None,cf_path=None,n=10):
-    import rename
-    if(rename_path):
-        helper=rename.get_renam_fun("../rename")
-    else:
-        helper=None
+    helper=et_rename_helper(in_path)
     ensemble=evol.EvolEnsemble(loss=Comb,transform=helper)
     result,weights=ensemble.median_exp(paths,clf="LR",n=n)
     result.report()
@@ -60,9 +56,27 @@ def gasen_exp(paths,rename_path=None,cf_path=None,n=10):
     if(cf_path):
         result.get_cf(cf_path)
 
-#def auc_exp(paths):
-#    [evol]
+def get_rename_helper(rename_path):
+    import rename
+    if(rename_path):
+        return rename.get_renam_fun(rename_path)
+    else:
+        return None
 
+def auc_exp(paths,out_path,rename_path=None,n=1):
+    lines=[]
+    helper=get_rename_helper(rename_path)
+    for i in range(1,9):
+        p_i= 0.1*(i+1)
+        valid_i=evol.Validation(p=p_i) 
+        ensemble_i=evol.EvolEnsemble(valid_i,loss=Comb,
+            transform=helper)
+        result_i,weights_i=ensemble_i(paths,clf="LR",n=n)
+        n_clf= len(weights_i[weights_i!=0])
+        line_i=exp.get_metrics(result_i)
+        line_i="%s,%d,%s" % (str(p_i),n_clf,line_i)
+        lines.append(line_i)
+    files.save_txt(lines,out_path)
 
 if __name__ == "__main__":
     dataset=".."
@@ -70,4 +84,5 @@ if __name__ == "__main__":
     paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitI/feats")
     paths["common"].append("../1D_CNN/feats")
 #    visualize_corl(paths,"visualize/raw/splitII")
-    gasen_exp(paths)
+#    gasen_exp(paths)
+    auc_exp(paths,"test2","../rename")
