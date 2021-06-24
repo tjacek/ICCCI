@@ -54,14 +54,20 @@ def gasen_exp(paths,rename_path=None,cf_path=None,n=10):
     else:
         helper=None
     ensemble=evol.EvolEnsemble(loss=Comb,transform=helper)
-    result=ensemble.median_exp(paths,clf="LR",n=n)
+    result,weights=ensemble.median_exp(paths,clf="LR",n=n)
     result.report()
+    print(weights)
     if(cf_path):
         result.get_cf(cf_path)
+
+#def auc_exp(paths):
+#    [evol]
+
 
 if __name__ == "__main__":
     dataset=".."
     dir_path=None
     paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitI/feats")
     paths["common"].append("../1D_CNN/feats")
-    visualize_corl(paths,"visualize/raw/splitII")
+#    visualize_corl(paths,"visualize/raw/splitII")
+    gasen_exp(paths)
