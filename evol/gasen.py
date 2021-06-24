@@ -45,15 +45,23 @@ def visualize_corl(paths,out_path):
     d=[ result_i.true_one_hot() for result_i in results]
     C=corl(results,d)
 #    C=np.round_(C, decimals=3) 
-    np.savetxt(out_path, C)
+    np.savetxt(out_path, C,delimiter=',')
+
+def gasen_exp(paths,rename_path=None,cf_path=None,n=10):
+    import rename
+    if(rename_path):
+        helper=rename.get_renam_fun("../rename")
+    else:
+        helper=None
+    ensemble=evol.EvolEnsemble(loss=Comb,transform=helper)
+    result=ensemble.median_exp(paths,clf="LR",n=n)
+    result.report()
+    if(cf_path):
+        result.get_cf(cf_path)
 
 if __name__ == "__main__":
     dataset=".."
     dir_path=None
     paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitI/feats")
     paths["common"].append("../1D_CNN/feats")
-    print(paths)
-    ensemble=evol.EvolEnsemble(loss=Comb)
-    result=ensemble.median_exp(paths,n=10)
-    result.report()
-#    visualize_corl(paths,"3DHOI")
+    visualize_corl(paths,"visualize/raw/splitII")
