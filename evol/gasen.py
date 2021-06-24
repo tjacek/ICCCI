@@ -3,6 +3,14 @@ sys.path.append("..")
 import numpy as np
 import evol,exp,ens,learn
 
+class Comb(object):
+    def __init__(self,all_votes):
+        self.corl=Corl(all_votes)
+        self.mse=evol.MSE(all_votes)
+
+    def __call__(self,weights):
+        return self.corl(weights)+self.mse(weights) 
+
 class Corl(object):
     def __init__(self,all_votes):
         self.all_votes=ens.Votes(all_votes)	
@@ -45,7 +53,7 @@ if __name__ == "__main__":
     paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitI/feats")
     paths["common"].append("../1D_CNN/feats")
     print(paths)
-    ensemble=evol.EvolEnsemble(loss=Corl)
+    ensemble=evol.EvolEnsemble(loss=Comb)
     result=ensemble.median_exp(paths,n=10)
     result.report()
 #    visualize_corl(paths,"3DHOI")

@@ -40,10 +40,14 @@ class EvolEnsemble(ens.Ensemble):
         return weights
 
     def median_exp(self,paths,clf="LR",n=1):
+        results=self.by_acc(paths,clf,n)
+        return results[len(results)//2]
+
+    def by_acc(self,paths,clf,n):
         results=self(paths,clf,n)
         acc=[ result_i.get_acc() for result_i in results]
-        index=np.argsort(acc)[len(acc)//2]
-        return results[index]
+        indexes=np.argsort(acc)
+        return [results[i] for i in indexes]
 
 class Validation(object):
     def __init__(self,selector_gen=None):
