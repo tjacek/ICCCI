@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
 import numpy as np
-import evol,exp,ens
+import evol,exp,ens,learn
 
 class Corl(object):
     def __init__(self,all_votes):
@@ -31,6 +31,14 @@ def corl(results,d):
             C[i,j]=np.mean(c_ij)
     return C
 
+def visualize_corl(paths,out_path):
+    datasets=ens.read_dataset(paths["common"],paths["binary"]) 
+    results=[learn.train_model(data_i) for data_i in datasets]
+    d=[ result_i.true_one_hot() for result_i in results]
+    C=corl(results,d)
+#    C=np.round_(C, decimals=3) 
+    np.savetxt(out_path, C)
+
 if __name__ == "__main__":
     dataset=".."
     dir_path=None
@@ -40,3 +48,4 @@ if __name__ == "__main__":
     ensemble=evol.EvolEnsemble(loss=Corl)
     result=ensemble.median_exp(paths,n=10)
     result.report()
+#    visualize_corl(paths,"3DHOI")
