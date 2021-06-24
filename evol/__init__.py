@@ -19,7 +19,7 @@ class EvolEnsemble(ens.Ensemble):
     def __call__(self,paths,clf="LR",n=1):
         votes,datasets=super(EvolEnsemble,self).make_votes(paths,clf)
         if(n==1):
-            return [self.single_exp(datasets)]
+            return [self.single_exp(votes,datasets)]
         return [self.single_exp(votes,datasets) for i in range(n)]
 
     def single_exp(self,votes,datasets):
@@ -43,10 +43,12 @@ class EvolEnsemble(ens.Ensemble):
         results=self.by_acc(paths,clf,n)
         return results[len(results)//2]
 
-    def by_acc(self,paths,clf,n):
+    def by_acc(self,paths,clf="LR",n=1):
         results=self(paths,clf,n)
         acc=[ result_i.get_acc() for result_i in results]
+        print(acc)
         indexes=np.argsort(acc)
+        print(indexes)
         return [results[i] for i in indexes]
 
 class Validation(object):
