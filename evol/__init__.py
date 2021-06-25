@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import mean_squared_error
 from scipy.optimize import differential_evolution
-import ens,exp,learn,files
+import ens,exp,learn,files,feats
 
 class EvolEnsemble(ens.Ensemble):
     def __init__(self,valid=None,loss=None,read=None,transform=None):
@@ -56,19 +56,27 @@ class EvolEnsemble(ens.Ensemble):
         weights=[weights[i] for i in indexes]
         return results,weights
 
-class SubsetEnsemble(ens.Ensemble):
-    def __init__(self,valid,read=None,transform=None):
-        super(SubsetEnsemble,self).__init__(read,transform)
-        self.valid=valid
+class BaseValidation(object):
+    def __init__(self, p):
+        self.p=p
 
-    def __call__(self,paths,clf="LR",n=1):
-        datasets=super(SubsetEnsemble,self).get_datasets(paths)
-        results=self.valid.subset(datasets,clf)
-        votes=ens.Votes(results)
-        result=votes.voting(False)
-        return result,len(results)
+    def __call__(self,datasets,clf="LR"):
+        train,test=zip(*[data_i.split()  for data_i in datasets])
+        names=list(train[0].keys())
+        s_names=[ name_i for name_i in names
+                    if(np.random.uniform()<self.p)]
+        results=[]
+        for i,train_i in enumerate(train):
+            s_train_i={name_j:train_i[name_j] 
+                    for name_j in s_names}
+            s_data_i={**s_train_i,**test[i]}
+            s_data_i= feats.Feats(s_data_i)
+            result_i=learn.train_model(s_data_i,
+                binary=False,clf_type=clf)
+            results.append(result_i)	
+        return results
 
-class Validation(object):
+class StratValidation(object):
     def __init__(self,selector_gen=None):
         if( selector_gen is None):
             selector_gen=StratGen(test_size=0.5)	
@@ -82,22 +90,6 @@ class Validation(object):
         selector= self.selector_gen(names)
         results= [learn.train_model(train_i,clf_type=clf,selector=selector)
                 for train_i in train]
-        return results
-
-    def subset(self,datasets,clf="LR"):
-        train,test=datasets[0].split()
-        train,test=list(train.keys()),list(test.keys())
-        selector= self.selector_gen(train)
-        train=[name_i for name_i in train
-                if(not selector(name_i))]
-        final=train+test
-        import feats
-        def helper(data_i):
-            raw={ name_i:data_i[name_i]
-                    for name_i in final }
-            return feats.Feats(raw)
-        results= [learn.train_model(helper(data_i),clf_type=clf)
-                for data_i in datasets]
         return results
 
 class StratGen(object):
@@ -120,7 +112,7 @@ class MSE(object):
 
     def __call__(self,weights):
         self.iter+=1
-        print(self.iter)
+#        print(self.iter)
         weights=weights/np.sum(weights)
         result=self.all_votes.weighted(weights)
         y_true=result.true_one_hot()

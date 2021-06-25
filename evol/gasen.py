@@ -63,25 +63,26 @@ def get_rename_helper(rename_path):
     else:
         return None
 
-def auc_exp(paths,out_path,rename_path=None,n=1):
+def auc_exp(paths,out_path,rename_path=None,n=10):
     lines=[]
     helper=get_rename_helper(rename_path)
     for i in range(1,9):
         p_i= 0.1*(i+1)
-        valid_i=evol.Validation(p_i) 
-        ensemble_i=evol.SubsetEnsemble(valid_i,#loss=Comb,
+        valid_i=evol.BaseValidation(p_i) 
+        ensemble_i=evol.EvolEnsemble(valid_i,loss=Comb,
             transform=helper)
-        result_i,weights_i=ensemble_i(paths,clf="LR",n=n)
+        result_i,weights_i=ensemble_i.median_exp(paths,clf="LR",n=n)
         n_clf= get_n_clf(weights_i)
         line_i=exp.get_metrics(result_i)
         line_i="%s,%d,%s" % (str(p_i),n_clf,line_i)
+        print(line_i)
         lines.append(line_i)
     files.save_txt(lines,out_path)
 
 def get_n_clf(weights):
     if(type(weights)==int):
         return weights
-    return len(weights_i[weights_i!=0])
+    return len(weights[weights!=0])
 
 if __name__ == "__main__":
     dataset=".."
@@ -90,4 +91,4 @@ if __name__ == "__main__":
     paths["common"].append("../1D_CNN/feats")
 #    visualize_corl(paths,"visualize/raw/splitII")
 #    gasen_exp(paths)
-    auc_exp(paths,"test2","../rename")
+    auc_exp(paths,"A","../rename")
