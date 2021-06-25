@@ -34,18 +34,20 @@ class EnsExperiment(object):
         return results,weights	
 
 class EvolEnsemble(ens.Ensemble):
-    def __init__(self,valid=None,loss=None,read=None,transform=None):
+    def __init__(self,valid=None,loss=None,read=None,transform=None,
+    	            full=False):
         super(EvolEnsemble,self).__init__(read,transform)
-        if(valid is None):
-            valid=Validation()	
-        if(loss is None):
-            loss=MSE
+        valid,loss=init_ens(valid,loss)
         self.valid=valid
         self.loss=loss
+        self.full=full
 
     def __call__(self,votes,datasets):
-        weights=self.find_weights(datasets)
-        result=votes.weighted(weights)
+        weights,s_result=self.find_weights(datasets)
+        if(self.full):
+            result=votes.weighted(weights)
+        else:
+            result=ens.Votes(s_result).weighted(weights)
         n_clf=len(weights[weights>0.02])        
         return result,n_clf
 
@@ -59,7 +61,14 @@ class EvolEnsemble(ens.Ensemble):
 #                init=init_matrix)
         loss_fun.iter=0
         weights=result['x']
-        return weights     
+        return weights,results     
+
+def init_ens(valid,loss):
+    if(valid is None):
+        valid=Validation()	
+    if(loss is None):
+        loss=MSE
+    return valid,loss
 
 class BaseValidation(object):
     def __init__(self, p):
@@ -76,6 +85,7 @@ class BaseValidation(object):
                     for name_j in s_names}
             s_data_i={**s_train_i,**test[i]}
             s_data_i= feats.Feats(s_data_i)
+#            datasets.append(s_data)
             result_i=learn.train_model(s_data_i,
                 binary=False,clf_type=clf)
             results.append(result_i)	
