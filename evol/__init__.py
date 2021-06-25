@@ -6,40 +6,17 @@ from sklearn.metrics import mean_squared_error
 from scipy.optimize import differential_evolution
 import ens,exp,learn,files,feats
 
-class EvolEnsemble(ens.Ensemble):
-    def __init__(self,valid=None,loss=None,read=None,transform=None):
-        super(EvolEnsemble,self).__init__(read,transform)
-        if(valid is None):
-            valid=Validation()	
-        if(loss is None):
-            loss=MSE
-        self.valid=valid
-        self.loss=loss
+class EnsExperiment(object):
+    def __init__(self, ensemble):
+        self.ensemble = ensemble
 
     def __call__(self,paths,clf="LR",n=1):
-        votes,datasets=super(EvolEnsemble,self).make_votes(paths,clf)
+        votes,datasets=self.ensemble.make_votes(paths,clf)
         if(n==1):
             return self.single_exp(votes,datasets)
-        pairs=[self.single_exp(votes,datasets) for i in range(n)]
+        pairs=[self.ensemble(votes,datasets) for i in range(n)]
         results,weights=zip(*pairs)
         return results,weights
-
-    def single_exp(self,votes,datasets):
-        weights=self.find_weights(datasets)
-        result=votes.weighted(weights)
-        return result,weights
-
-    def find_weights(self,datasets,clf="LR"):
-        results=self.valid(datasets,clf)
-        loss_fun=self.loss(results)
-        bound_w = [(0.01, 1.0)  for _ in results]
-#        init_matrix=np.ones((6, len(bound_w)))
-        result = differential_evolution(loss_fun, bound_w, 
-                tol=1e-7,maxiter=3,popsize=5,polish=True)#False)
-#                init=init_matrix)
-        loss_fun.iter=0
-        weights=result['x']
-        return weights
 
     def median_exp(self,paths,clf="LR",n=1):
         results,weights=self.by_acc(paths,clf,n)
@@ -54,7 +31,35 @@ class EvolEnsemble(ens.Ensemble):
         print(indexes)
         results=[results[i] for i in indexes]
         weights=[weights[i] for i in indexes]
-        return results,weights
+        return results,weights	
+
+class EvolEnsemble(ens.Ensemble):
+    def __init__(self,valid=None,loss=None,read=None,transform=None):
+        super(EvolEnsemble,self).__init__(read,transform)
+        if(valid is None):
+            valid=Validation()	
+        if(loss is None):
+            loss=MSE
+        self.valid=valid
+        self.loss=loss
+
+    def __call__(self,votes,datasets):
+        weights=self.find_weights(datasets)
+        result=votes.weighted(weights)
+        n_clf=len(weights[weights>0.02])        
+        return result,n_clf
+
+    def find_weights(self,datasets,clf="LR"):
+        results=self.valid(datasets,clf)
+        loss_fun=self.loss(results)
+        bound_w = [(0.01, 1.0)  for _ in results]
+#        init_matrix=np.ones((6, len(bound_w)))
+        result = differential_evolution(loss_fun, bound_w, 
+                tol=1e-7,maxiter=3,popsize=5,polish=True)#False)
+#                init=init_matrix)
+        loss_fun.iter=0
+        weights=result['x']
+        return weights     
 
 class BaseValidation(object):
     def __init__(self, p):
@@ -120,6 +125,8 @@ class MSE(object):
         squared_mean=[np.sum((true_i- pred_i)**2)
                 for true_i,pred_i in zip(y_true,y_pred)]
         return  np.mean(squared_mean)
+
+
 
 if __name__ == "__main__":
     dataset=".."
