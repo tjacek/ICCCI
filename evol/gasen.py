@@ -69,7 +69,7 @@ def auc_exp(paths,out_path,rename_path=None,n=10):
     for i in range(2,9):
         p_i= 0.1*(i+1)
         valid_i=evol.BaseValidation(p_i) 
-        ensemble_i=evol.EvolEnsemble(valid_i,loss=Comb,
+        ensemble_i=evol.EvolEnsemble(valid_i,#loss=Comb,
             transform=helper)
         ensemble_i=evol.EnsExperiment(ensemble_i)
         result_i,n_clf=ensemble_i.median_exp(paths,clf="LR",n=n)
@@ -82,8 +82,8 @@ def auc_exp(paths,out_path,rename_path=None,n=10):
 if __name__ == "__main__":
     dataset=".."
     dir_path=None
-    paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitII/feats")
+    paths=exp.basic_paths(dataset,dir_path,"dtw","ens_splitI/feats")
     paths["common"].append("../1D_CNN/feats")
 #    visualize_corl(paths,"visualize/raw/splitII")
 #    gasen_exp(paths)
-    auc_exp(paths,"A","../rename")
+    auc_exp(paths,"no_weights")#,"../rename")

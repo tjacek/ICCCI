@@ -33,15 +33,16 @@ class EnsExperiment(object):
         weights=[weights[i] for i in indexes]
         return results,weights	
 
-class SimpleEvol(object):
-    def __init__(self):	
-        self.valid=BaseValidation()
+class SimpleEnsemble(ens.Ensemble):
+    def __init__(self,valid,read=None,transform=None):
+        super(SimpleEnsemble,self).__init__(read,transform)
+        self.valid=valid
 
     def __call__(self,votes,datasets):
         results=self.valid(datasets,"LR")
         result=ens.Votes(results).voting(False)
-        return result
-        
+        return result,len(results)
+
 class EvolEnsemble(ens.Ensemble):
     def __init__(self,valid=None,loss=None,read=None,transform=None,
     	            full=False):
